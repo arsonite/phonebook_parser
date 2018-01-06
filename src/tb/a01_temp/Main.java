@@ -1,19 +1,18 @@
-package tb.a02;
+/**
+ * This is the {@code Main}-class where the starting and joining of threads are arranged.
+ * 
+ * <p>{@code 06.11.2017}
+ * @author Burak Günaydin ({@code 853872})
+ */
+
+package tb.a01;
 
 import java.util.ArrayList;
 
-/**
- * This is the {@code Server}-class responsible for the search-threads
- * and the initiation of the TCP-server. 
- * 
- * @since JDK 1.91 ~ <i>2018</i>
- * @author Burak Günaydin <b>{@code (853872)}</b>
- */
-public class Server {
+public class Main {
 	public static void main(String[] args) throws Exception {
-		StreamBuffer.fixConsole();
 		Utility u = new Utility();
-		ArrayList<PhonebookEntry> pb = u.parsePhonebook("./src/_res/telefonbuch.txt");
+		ArrayList<PhonebookEntry> pb = u.parsePhonebook();
 		System.out.print("Please enter either a name, phone-number or both.\n> ");
 		while(true) {
 			try {

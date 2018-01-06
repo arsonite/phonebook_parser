@@ -1,18 +1,19 @@
-package tb.a02;
-
-import java.util.ArrayList;
-
 /**
  * The class {@code ThreadedSearch} is a subclass of {@code Thread} 
  * confirms if the given object is either a String or Integer and then
  * proceeds to search the database for either.
  * 
- * @since JDK 1.91 ~ <i>2017</i>
- * @author Burak Günaydin <b>{@code (853872)}</b>
+ * <p>{@code 06.11.2017}
+ * @author Burak Günaydin ({@code 853872})
  */
+
+package tb.a01;
+
+import java.util.ArrayList;
+
 public class ThreadedSearch extends Thread {
-	final ArrayList<PhonebookEntry> pb;
-	private SynchronizedList<PhonebookEntry> list;
+	private ArrayList<PhonebookEntry> pb;
+	public SynchronizedList<PhonebookEntry> list;
 	private String s;
 	private int i;
 	private boolean str, f;
@@ -55,7 +56,7 @@ public class ThreadedSearch extends Thread {
 				return;
 			}
 		}
-		Server.printAllResults(list);
+		Main.printAllResults(list);
 		f = false;
 	}
 }

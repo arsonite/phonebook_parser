@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import teaType.util.io.Reader;
-
 /**
  * The class {@code Utility} is a utilitarian class consisting of multiple different
  * methods, that don't interact much with each other, but are just a collection of 
@@ -17,10 +15,20 @@ import teaType.util.io.Reader;
  * @author Burak Günaydin <b>{@code (853872)}</b>
  */
 public class Utility {
+	private String host;
+	private int port;
 	final Scanner in;
+	private PrintWriter out;
 
 	public Utility() {
 		in = new Scanner(System.in);
+	}
+	
+	public Utility(PrintWriter out, String host, int port) {
+		in = new Scanner(System.in);
+		this.out = out;
+		this.host = host;
+		this.port = port;
 	}
 
 	/**
@@ -38,7 +46,7 @@ public class Utility {
 	 * @return A PhonebookEntry-array containing names and corresponding numbers
 	 */
 	public final ArrayList<PhonebookEntry> parsePhonebook(String path) {
-		String[] tb = new Reader().fileToString(path);
+		String[] tb = new Reader().stringArray(path);
 		ArrayList<PhonebookEntry> pb = new ArrayList<PhonebookEntry>();
 		for(int i = 0; i < tb.length; i++) {
 			String[] split = tb[i].split("(?<=\\D)(?=\\d)");
