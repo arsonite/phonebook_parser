@@ -11,11 +11,11 @@ import java.util.ArrayList;
  * @author Burak Günaydin <b>{@code (853872)}</b>
  */
 public class ThreadedSearch extends Thread {
-	final ArrayList<PhonebookEntry> pb;
-	private SynchronizedList<PhonebookEntry> list;
 	private String s;
 	private int i;
 	private boolean str, f;
+	final ArrayList<PhonebookEntry> pb;
+	private SynchronizedList<PhonebookEntry> list;
 
 	public ThreadedSearch(Object o, ArrayList<PhonebookEntry> pb) throws Exception {
 		this.pb = pb;
@@ -55,7 +55,7 @@ public class ThreadedSearch extends Thread {
 				return;
 			}
 		}
-		Server.printAllResults(list);
+		Server.printResultsHTML(list);
 		f = false;
 	}
 }

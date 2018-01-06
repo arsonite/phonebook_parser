@@ -79,6 +79,13 @@ public class Utility {
 		}
 		out.println();
 	}
+	
+	public void printLine(String s) {
+		for(int i = 0; i < s.length(); i++) {
+			System.out.print("-");
+		}
+		System.out.println();
+	}
 
 	public boolean findExit(String input) { return findPattern(input, "^[Qq]+?uit|^[Ee]+?xit"); }
 
