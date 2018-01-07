@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+
 import java.net.ServerSocket;
 import java.net.Socket;
+
 import java.util.ArrayList;
 
 /**
@@ -36,51 +38,33 @@ public class Server {
 		System.out.println(host + ":" + port + "\n");
 		ss = new ServerSocket(port);
 
-		status = new boolean[10];
-		for(int i = 0; i < status.length; i++) {
-			status[i] = false;
-		}
-
 		while(true) {
-			System.out.println();
 			cs = ss.accept();
 			bR = new BufferedReader(new InputStreamReader(cs.getInputStream()));
 			out = new PrintWriter(cs.getOutputStream());
 
-			String info = null;
-			/*if(!status[0]) {System.out.println("Initial Status-Check:");
-				u.printLine("Initial Status-Check:");
-				info = null;
-				while((info = bR.readLine()) != null) {
-					if(info.isEmpty()) {
-						break;
-					}
-					System.err.println(info);
-					status[0] = true;
-				}
-			}*/
-			info = bR.readLine();
+			String info = bR.readLine();
 			if(info.startsWith("GET /favicon")) {
 				System.err.print("Blockiert: ");
 				System.out.println("Favicon-Request");
-				bR.close();
 				continue;
 			} else if(info.startsWith("GET / HTTP/1.1")) {
 				System.err.print("Ursprüngliche Index-Page: ");
 				System.out.println(info);
 				printWelcomeHTML();
+			} else if(info.startsWith("GET /?Z")) {
+				printWelcomeHTML();
 			} else if(info.startsWith("GET /?")) {
 				System.err.print("Received Search String: ");
 				System.out.println(info);
-				String name = info.replaceAll("GET /\\?A=", "").replaceAll("&B.*", "").replaceAll("\\+", " ");
-				String number = info.replaceAll("GET /\\?A=.*&B=", "").replaceAll("&[CD].*", "");
-				String action = info.replaceAll("GET /\\?A=.+&[CD]+?=", "").replaceAll("\\+", "").replaceAll(" HTTP/1.1", "");
+				String name = u.hardcodedReplace(info, 0);
+				String number = u.hardcodedReplace(info, 1);
+				String action = u.hardcodedReplace(info, 2);
 				System.err.print("Isolated: ");
 				System.out.println(name + " " + number + " " + action);
 				if(action.equals("StarteSuche")) {
-					if((name.isEmpty() && number.isEmpty()) || name.matches("^\\s+") && number.matches("^\\s+")) {
-						// TODO: Socket-Tocken
-						System.err.println("\nError: No whitespace-only characters!");
+					if((name.isEmpty() && number.isEmpty()) || name.matches("^\\s+") || number.matches("^\\s+")) {
+						printErrorHTML("Keine leeren Such-Strings verschicken!");
 						continue;
 					} else if(!name.isEmpty() && !number.isEmpty()) {
 						ThreadedSearch t1 = new ThreadedSearch(name, pb);
@@ -89,17 +73,29 @@ public class Server {
 						t2.start();
 						t1.join();
 						t2.join();
+						if(!t1.f && !t2.f) {
+							printErrorHTML("Die Suche nach " + name + " " + number + " war erfolglos.");
+						} else if(!t1.f) {
+							printErrorHTML("Die Suche nach " + name + " war erfolglos.");
+						} else if(!t2.f) {
+							printErrorHTML("Die Suche war " + number + " war erfolglos.");
+						}
 					} else if(!name.isEmpty()) {
 						ThreadedSearch t = new ThreadedSearch(name, pb);
 						t.start();
 						t.join();
+						if(!t.f) {
+							printErrorHTML("Die Suche nach " + name + " war erfolglos.");
+						}
 					} else if(!number.isEmpty() || u.findNumber(number)) {
 						ThreadedSearch t = new ThreadedSearch(Integer.parseInt(number), pb);
 						t.start();
 						t.join();
+						if(!t.f) {
+							printErrorHTML("Die Suche nach " + number + " war erfolglos.");
+						}
 					} else {
-						// TODO: Socket-Tocken
-						System.err.println("\nError: \"" + name + number + "\" is not a valid input.");
+						printErrorHTML(name + " " + number + " ist keine gültige Eingabe.");
 					}
 				} else if(action.equals("BeendeServer")) {
 					printExitHTML();
@@ -121,14 +117,28 @@ public class Server {
 		cs.close();
 	}
 
-	final static void printWelcomeHTML() {
-		printHeaderHTML();
+	final static void printHeaderHTML() {
+		out.println("HTTP/1.1 200 OK Content-Type: text/html");
+		out.println();
 		out.println(""
 				+ "<html>"
 				+ "<head>"
 				+ "<meta charset=\"utf-8\">"
 				+ "</head>"
 				+ "<body>"
+				);
+	}
+	
+	final static void printFooterHTML() {
+		out.println(""
+				+ "</body>"
+				+ "</html>"
+				);
+	}
+
+	final static void printWelcomeHTML() {
+		printHeaderHTML();
+		out.println(""
 				+ "<h2 align=left>Das Online-Telefonbuch-Verzeichnis</h2>"
 				+ "<h3>Suche nach einem <i>Namen</i>, einer <i>Nummer</i> oder beidem (nebenläufig).</h3>"
 				+ "<form method=get action='http://" + host + ":" + port + "'>"
@@ -140,40 +150,34 @@ public class Server {
 				+ "<td><input type=submit name=D value=\"Beende Server\"></td></tr>"
 				+ "</table>"
 				+ "</form>"
-				+ "</body>"
-				+ "</html>"
 				);
-		out.println();
-	}
-
-	final static void printHeaderHTML() {
-		out.println("HTTP/1.1 200 OK Content-Type: text/html");
-		out.println();
+		printFooterHTML();
 	}
 
 	final static void printExitHTML() {
 		printHeaderHTML();
 		out.println(""
-				+ "<html>"
-				+ "<head>"
-				+ "<meta charset=\"utf-8\">"
-				+ "</head>"
-				+ "<body>"
 				+ "<h2 align=center>Der Server wurde beendet.</h2>"
-				+ "</body>"
-				+ "</html>"
 				);
-		out.println();
+		printFooterHTML();
+	}
+
+	final static void printErrorHTML(String err) {
+		printHeaderHTML();
+		out.println(""
+				+ "<h2 align=left>Fehler: " + err + "</h2>"
+				+ "<form method=get action='http://" + host + ":" + port + "'>"
+				+ "<table>"
+				+ "<tr><td valign=top><input type=submit name=Z value=\"Zurück\"></td>"
+				+ "</table>"
+				+ "</form>"
+				);
+		printFooterHTML();
 	}
 
 	public final static void printResultsHTML(SynchronizedList<PhonebookEntry> list) {
 		printHeaderHTML();
 		out.println(""
-				+ "<html>"
-				+ "<head>"
-				+ "<meta charset=\"utf-8\">"
-				+ "</head>"
-				+ "<body>"
 				+ "<h2 align=left>Ihre Suchergebnisse:</h2>"
 				+ "<ul>"
 				);
@@ -184,10 +188,13 @@ public class Server {
 			}
 		}
 		out.println(""
-				+ "</body>"
-				+ "</html>"
 				+ "</ul>"
+				+ "<form method=get action='http://" + host + ":" + port + "'>"
+				+ "<table>"
+				+ "<tr><td valign=top><input type=submit name=Z value=\"Zurück\"></td>"
+				+ "</table>"
+				+ "</form>"
 				);
-		out.println();
+		printFooterHTML();
 	}
 }

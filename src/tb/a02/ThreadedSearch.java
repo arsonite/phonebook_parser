@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class ThreadedSearch extends Thread {
 	private String s;
 	private int i;
-	private boolean str, f;
+	public boolean str, f;
 	final ArrayList<PhonebookEntry> pb;
 	private SynchronizedList<PhonebookEntry> list;
 

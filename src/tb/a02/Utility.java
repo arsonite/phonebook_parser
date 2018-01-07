@@ -23,7 +23,7 @@ public class Utility {
 	public Utility() {
 		in = new Scanner(System.in);
 	}
-	
+
 	public Utility(PrintWriter out, String host, int port) {
 		in = new Scanner(System.in);
 		this.out = out;
@@ -79,7 +79,7 @@ public class Utility {
 		}
 		out.println();
 	}
-	
+
 	public void printLine(String s) {
 		for(int i = 0; i < s.length(); i++) {
 			System.out.print("-");
@@ -101,4 +101,17 @@ public class Utility {
 	 * @return A boolean giving information if the pattern was found or not
 	 */
 	final boolean findPattern(String input, String regex) { return Pattern.compile(regex).matcher(input).find(); }
+
+	public final String hardcodedReplace(String s, int i) {
+		switch(i) {
+		case 0:
+			return s.replaceAll("GET /\\?A=", "").replaceAll("&B.*", "").replaceAll("\\+", " ");
+		case 1:
+			return s.replaceAll("GET /\\?A=.*&B=", "").replaceAll("&[CD].*", "");
+		case 2:
+			return s.replaceAll("GET /\\?A=.+&[CD]+?=", "").replaceAll("\\+", "").replaceAll(" HTTP/1.1", "");
+		default:
+			return "";
+		}
+	}
 }
