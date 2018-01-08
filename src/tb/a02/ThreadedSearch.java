@@ -15,11 +15,9 @@ public class ThreadedSearch extends Thread {
 	private int i;
 	public boolean str, f;
 	final ArrayList<PhonebookEntry> pb;
-	private SynchronizedList<PhonebookEntry> list;
 
 	public ThreadedSearch(Object o, ArrayList<PhonebookEntry> pb) throws Exception {
 		this.pb = pb;
-		list = new SynchronizedList<PhonebookEntry>();
 		if(o.getClass() == String.class) {
 			s = o.toString();
 			str = true;
@@ -35,27 +33,31 @@ public class ThreadedSearch extends Thread {
 		if(str) {
 			for(PhonebookEntry e : pb) {
 				if(e.getName().equals(s)) {
-					list.add(e);
+					Server.list.add(e);
 					f = true;
 				}
 			}
-			if(!f) {
-				System.err.println("The search for the name '" + s + "' failed.\n");
+			if(f) {
 				return;
+			} else {
+				f = false;
+				// TODO: Temporary, to be suplemented by Token
+				System.err.println("The search for the name '" + s + "' failed.\n");
 			}
 		} else {
 			for(PhonebookEntry e : pb) {
 				if(e.getNumber() == i) {
-					list.add(e);
+					Server.list.add(e);
 					f = true;
 				}
 			}
-			if(!f) {
-				System.err.println("The search for the number '" + i + "' failed.\n");
+			if(f) {
 				return;
+			} else {
+				f = false;
+				// TODO: Temporary, to be suplemented by Token
+				System.err.println("The search for the number '" + s + "' failed.\n");
 			}
 		}
-		Server.printResultsHTML(list);
-		f = false;
 	}
 }

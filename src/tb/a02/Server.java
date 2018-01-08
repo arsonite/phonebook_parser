@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
 
 import java.util.ArrayList;
 
@@ -25,20 +27,22 @@ public class Server {
 	static Socket cs;
 	static BufferedReader bR;
 	static PrintWriter out;
+	static SynchronizedList<PhonebookEntry> list; 
 
 	public static void main(String[] args ) throws Exception {
 		StreamBuffer.fixConsole();
 		u = new Utility();
 		ArrayList<PhonebookEntry> pb = u.parsePhonebook("./src/_res/telefonbuch.txt");
 
-		//host = InetAddress.getLocalHost().getHostName();
-		//port = Integer.parseInt(98 + host.replaceAll("[^\\d]+", ""));
+		host = InetAddress.getLocalHost().getHostName();
+		port = Integer.parseInt(98 + host.replaceAll("[^\\d]+", ""));
 		host = "localhost";
 		port = 8888;
 		System.out.println(host + ":" + port + "\n");
 		ss = new ServerSocket(port);
 
 		while(true) {
+			list = new SynchronizedList<PhonebookEntry>();
 			cs = ss.accept();
 			bR = new BufferedReader(new InputStreamReader(cs.getInputStream()));
 			out = new PrintWriter(cs.getOutputStream());
@@ -58,44 +62,55 @@ public class Server {
 				System.err.print("Received Search String: ");
 				System.out.println(info);
 				String name = u.hardcodedReplace(info, 0);
+				name = URLDecoder.decode(name, "UTF-8");
 				String number = u.hardcodedReplace(info, 1);
+				number = URLDecoder.decode(number, "UTF-8");
 				String action = u.hardcodedReplace(info, 2);
 				System.err.print("Isolated: ");
 				System.out.println(name + " " + number + " " + action);
 				if(action.equals("StarteSuche")) {
-					if((name.isEmpty() && number.isEmpty()) || name.matches("^\\s+") || number.matches("^\\s+")) {
-						printErrorHTML("Keine leeren Such-Strings verschicken!");
-						continue;
-					} else if(!name.isEmpty() && !number.isEmpty()) {
+					if((name.equals("") && number.equals("")) || (name.matches("^\\s+") && number.matches("^\\s+"))) {
+						System.out.println("Thread-State: LEERER SUCHSTRING");
+						printErrorHTML(2, "");
+					} else if(u.findNameAndNumber(name + " " + number)) {
+						System.out.println("Thread-State: NAME & NUMMER");
 						ThreadedSearch t1 = new ThreadedSearch(name, pb);
-						ThreadedSearch t2 = new ThreadedSearch(number, pb);
+						ThreadedSearch t2 = new ThreadedSearch(Integer.parseInt(number), pb);
 						t1.start();
 						t2.start();
 						t1.join();
 						t2.join();
 						if(!t1.f && !t2.f) {
-							printErrorHTML("Die Suche nach " + name + " " + number + " war erfolglos.");
+							printErrorHTML(0, name + " " + number);
 						} else if(!t1.f) {
-							printErrorHTML("Die Suche nach " + name + " war erfolglos.");
+							printErrorHTML(0, name);
 						} else if(!t2.f) {
-							printErrorHTML("Die Suche war " + number + " war erfolglos.");
+							printErrorHTML(0, number);
+						} else {
+							printResultsHTML();
 						}
-					} else if(!name.isEmpty()) {
+					} else if(u.findName(name)) {
+						System.out.println("Thread-State: NAME");
 						ThreadedSearch t = new ThreadedSearch(name, pb);
 						t.start();
 						t.join();
 						if(!t.f) {
-							printErrorHTML("Die Suche nach " + name + " war erfolglos.");
+							printErrorHTML(0, name);
+						} else {
+							printResultsHTML();
 						}
-					} else if(!number.isEmpty() || u.findNumber(number)) {
+					} else if(u.findNumber(number)) {
+						System.out.println("Thread-State: NUMMER");
 						ThreadedSearch t = new ThreadedSearch(Integer.parseInt(number), pb);
 						t.start();
 						t.join();
 						if(!t.f) {
-							printErrorHTML("Die Suche nach " + number + " war erfolglos.");
+							printErrorHTML(0, number);
+						} else {
+							printResultsHTML();
 						}
 					} else {
-						printErrorHTML(name + " " + number + " ist keine gültige Eingabe.");
+						printErrorHTML(1, "");
 					}
 				} else if(action.equals("BeendeServer")) {
 					printExitHTML();
@@ -128,7 +143,7 @@ public class Server {
 				+ "<body>"
 				);
 	}
-	
+
 	final static void printFooterHTML() {
 		out.println(""
 				+ "</body>"
@@ -162,10 +177,22 @@ public class Server {
 		printFooterHTML();
 	}
 
-	final static void printErrorHTML(String err) {
+	final static void printErrorHTML(int code, String err) {
 		printHeaderHTML();
+		String s = "";
+		switch(code) {
+		case 0:
+			s = "Die Suche nach <i>" + err + "</i> war erfolglos.";
+			break;
+		case 1:
+			s = "Die Suche war erfolglos. Keine gültige Eingabe.";
+			break;
+		case 2:
+			s = "Keine leeren Such-Strings verschicken!";
+			break;
+		}
 		out.println(""
-				+ "<h2 align=left>Fehler: " + err + "</h2>"
+				+ "<h2 align=left>Fehler: " + s + "</h2>"
 				+ "<form method=get action='http://" + host + ":" + port + "'>"
 				+ "<table>"
 				+ "<tr><td valign=top><input type=submit name=Z value=\"Zurück\"></td>"
@@ -175,7 +202,7 @@ public class Server {
 		printFooterHTML();
 	}
 
-	public final static void printResultsHTML(SynchronizedList<PhonebookEntry> list) {
+	public final static void printResultsHTML() {
 		printHeaderHTML();
 		out.println(""
 				+ "<h2 align=left>Ihre Suchergebnisse:</h2>"
