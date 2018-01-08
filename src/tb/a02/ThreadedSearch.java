@@ -41,8 +41,6 @@ public class ThreadedSearch extends Thread {
 				return;
 			} else {
 				f = false;
-				// TODO: Temporary, to be suplemented by Token
-				System.err.println("The search for the name '" + s + "' failed.\n");
 			}
 		} else {
 			for(PhonebookEntry e : pb) {
@@ -55,8 +53,6 @@ public class ThreadedSearch extends Thread {
 				return;
 			} else {
 				f = false;
-				// TODO: Temporary, to be suplemented by Token
-				System.err.println("The search for the number '" + s + "' failed.\n");
 			}
 		}
 	}

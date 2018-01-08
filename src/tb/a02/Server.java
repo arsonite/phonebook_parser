@@ -61,19 +61,19 @@ public class Server {
 			} else if(info.startsWith("GET /?")) {
 				System.err.print("Received Search String: ");
 				System.out.println(info);
+
 				String name = u.hardcodedReplace(info, 0);
 				name = URLDecoder.decode(name, "UTF-8");
 				String number = u.hardcodedReplace(info, 1);
 				number = URLDecoder.decode(number, "UTF-8");
 				String action = u.hardcodedReplace(info, 2);
+
 				System.err.print("Isolated: ");
 				System.out.println(name + " " + number + " " + action);
 				if(action.equals("StarteSuche")) {
 					if((name.equals("") && number.equals("")) || (name.matches("^\\s+") && number.matches("^\\s+"))) {
-						System.out.println("Thread-State: LEERER SUCHSTRING");
 						printErrorHTML(2, "");
 					} else if(u.findNameAndNumber(name + " " + number)) {
-						System.out.println("Thread-State: NAME & NUMMER");
 						ThreadedSearch t1 = new ThreadedSearch(name, pb);
 						ThreadedSearch t2 = new ThreadedSearch(Integer.parseInt(number), pb);
 						t1.start();
@@ -83,14 +83,13 @@ public class Server {
 						if(!t1.f && !t2.f) {
 							printErrorHTML(0, name + " " + number);
 						} else if(!t1.f) {
-							printErrorHTML(0, name);
+							printSpecialCaseHTML(name);
 						} else if(!t2.f) {
-							printErrorHTML(0, number);
+							printSpecialCaseHTML(number);
 						} else {
 							printResultsHTML();
 						}
 					} else if(u.findName(name)) {
-						System.out.println("Thread-State: NAME");
 						ThreadedSearch t = new ThreadedSearch(name, pb);
 						t.start();
 						t.join();
@@ -100,7 +99,6 @@ public class Server {
 							printResultsHTML();
 						}
 					} else if(u.findNumber(number)) {
-						System.out.println("Thread-State: NUMMER");
 						ThreadedSearch t = new ThreadedSearch(Integer.parseInt(number), pb);
 						t.start();
 						t.join();
@@ -109,6 +107,12 @@ public class Server {
 						} else {
 							printResultsHTML();
 						}
+					} else if(u.findNameAndNumber(number + " " + name)) {
+						printErrorHTML(0, name + " " + number);
+					} else if(u.findNumber(name)) {
+						printErrorHTML(0, name);
+					} else if(u.findName(number)) {
+						printErrorHTML(0, number);
 					} else {
 						printErrorHTML(1, "");
 					}
@@ -216,6 +220,30 @@ public class Server {
 		}
 		out.println(""
 				+ "</ul>"
+				+ "<form method=get action='http://" + host + ":" + port + "'>"
+				+ "<table>"
+				+ "<tr><td valign=top><input type=submit name=Z value=\"Zurück\"></td>"
+				+ "</table>"
+				+ "</form>"
+				);
+		printFooterHTML();
+	}
+
+	final static void printSpecialCaseHTML(String err) {
+		printHeaderHTML();
+		out.println(""
+				+ "<h2 align=left>Ihre Suchergebnisse:</h2>"
+				+ "<ul>"
+				);
+		out.println();
+		if(!list.isEmpty()) {
+			for(PhonebookEntry e : list) {
+				out.println("<li>" + e.getName() + " - " + e.getNumber() + "</li>");
+			}
+		}
+		out.println(""
+				+ "</ul>"
+				+ "<h2 align=left>Fehler: Die Suche nach <i>\"" + err + "\"</i> war allerdings erfolglos.</h2>"
 				+ "<form method=get action='http://" + host + ":" + port + "'>"
 				+ "<table>"
 				+ "<tr><td valign=top><input type=submit name=Z value=\"Zurück\"></td>"
