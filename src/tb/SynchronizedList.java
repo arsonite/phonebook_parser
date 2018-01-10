@@ -1,14 +1,4 @@
-/**
- * The data-structure {@code SynchronizedArrayList} is my thread-safe implementation of the data-structure ArrayList.
- * Partially missing method-bodies are irrelevant for the required tasks.
- * 
- * <p>{@code 06.11.2017}
- * @author Burak Günaydin ({@code 853872})
- *
- * @param <T> Type-argument for the ArrayList.
- */
-
-package tb.a01;
+package tb;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,6 +6,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+/**
+ * The class {@code SynchronizedList} is my thread-safe implementation of the data-structure ArrayList.
+ * Partially missing method-bodies are irrelevant for the required tasks.
+ * 
+ * @since JDK 1.91 ~ <i>2017</i>
+ * @author Burak Günaydin <b>{@code (853872)}</b>
+ */
 public class SynchronizedList<T> implements List<T> {
 	private ArrayList<T> arr;
 

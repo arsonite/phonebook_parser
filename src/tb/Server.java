@@ -1,4 +1,4 @@
-package tb.a02;
+package tb;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,8 +34,8 @@ public class Server {
 		u = new Utility();
 		ArrayList<PhonebookEntry> pb = u.parsePhonebook("./src/_res/telefonbuch.txt");
 
-		host = InetAddress.getLocalHost().getHostName();
-		port = Integer.parseInt(98 + host.replaceAll("[^\\d]+", ""));
+		//host = InetAddress.getLocalHost().getHostName();
+		//port = Integer.parseInt(98 + host.replaceAll("[^\\d]+", ""));
 		host = "localhost";
 		port = 8888;
 		System.out.println(host + ":" + port + "\n");
@@ -49,18 +49,15 @@ public class Server {
 
 			String info = bR.readLine();
 			if(info.startsWith("GET /favicon")) {
-				System.err.print("Blockiert: ");
-				System.out.println("Favicon-Request");
+				System.out.println("Blockiert: Favicon-Request");
 				continue;
 			} else if(info.startsWith("GET / HTTP/1.1")) {
-				System.err.print("Ursprüngliche Index-Page: ");
-				System.out.println(info);
+				System.out.println("Ursprüngliche Index-Page: " + info);
 				printWelcomeHTML();
 			} else if(info.startsWith("GET /?Z")) {
 				printWelcomeHTML();
 			} else if(info.startsWith("GET /?")) {
-				System.err.print("Received Search String: ");
-				System.out.println(info);
+				System.out.println("Received Search String: " + info);
 
 				String name = u.hardcodedReplace(info, 0);
 				name = URLDecoder.decode(name, "UTF-8");
@@ -120,11 +117,10 @@ public class Server {
 					printExitHTML();
 					System.out.println("Der Server wurde beendet. Tschüss!");
 					emptyCache();
-					System.exit(0);
 					ss.close();
+					System.exit(0);
 				}
 			}
-			System.out.println();
 			emptyCache();
 		}
 	}

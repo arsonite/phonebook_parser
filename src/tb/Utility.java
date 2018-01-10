@@ -1,4 +1,4 @@
-package tb.a02;
+package tb;
 
 import java.io.PrintWriter;
 
